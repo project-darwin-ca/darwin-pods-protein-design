@@ -31,13 +31,26 @@ def test_esmfold_models(model_name: str):
 
   _compare_structures(pred_structure, gt_structure)
 
+def test_esmif_models():
+    target_pdb_file = Path(__file__).parents[0] / "esmfold_3B_v1_folding.pdb"
+    with open(target_pdb_file, "r") as f:
+        target_pdb_str = f.read()
 
+    target_structure = protein.Protein3.from_pdb_string(target_pdb_str)
+    expected_sequences = {
+        "esm_if1_gvp4_t16_142M_UR50": "DQQALIHHHEQEAAQKQALAAKYLDKSKLFSSQGEDTDSAEFAKRAEGESKQAQSHAALAAEGQRLFEQPPPP"
+    }
 
+    model_names = list(modeling.ESMIF_MODEL_CONFIGS.keys())
+    assert all([m in expected_sequences for m in model_names])
 
-
-
-
-
+    for model_name in model_names:
+        exp_sequence = expected_sequences[model_name]
+        inverse_folder = modeling.ESMForInverseFolding(
+            model_name=model_name, random_seed=0
+        )
+        sequence = inverse_folder(target_structure)[0]
+        assert sequence == exp_sequence
 
 
 
